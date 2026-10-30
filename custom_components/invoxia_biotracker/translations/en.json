@@ -1,0 +1,69 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Invoxia account",
+        "description": "Enter the e-mail address and password of your Invoxia account (the ones used in the Invoxia GPS or Biotracker app).",
+        "data": {
+          "username": "E-mail",
+          "password": "Password",
+          "api_url": "API URL"
+        },
+        "data_description": {
+          "api_url": "Leave the default value unless you know what you are doing."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Invoxia password",
+        "description": "The password of {username} was rejected. Enter the current one.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid e-mail or password.",
+      "cannot_connect": "Unable to reach the Invoxia servers.",
+      "insecure_url": "Only https:// addresses are accepted, so that your password is never sent in clear text.",
+      "no_trackers": "Login succeeded but the API returned no tracker for this account. Check the Home Assistant logs: the device types returned by the API are listed there.",
+      "api_error": "The Invoxia API returned an unexpected answer. Details are in the Home Assistant logs.",
+      "unknown": "Unexpected error. Details are in the Home Assistant logs."
+    },
+    "abort": {
+      "already_configured": "This Invoxia account is already configured.",
+      "reauth_successful": "Re-authentication successful."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Invoxia options",
+        "data": {
+          "scan_interval": "Update interval"
+        },
+        "data_description": {
+          "scan_interval": "Minutes between two requests to the Invoxia cloud. The API is not public: avoid small values."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_location": {
+        "name": "Last position"
+      },
+      "last_seen": {
+        "name": "Last seen"
+      },
+      "location_accuracy": {
+        "name": "Position accuracy"
+      },
+      "location_method": {
+        "name": "Position method"
+      },
+      "tracker_state": {
+        "name": "Tracker state"
+      }
+    }
+  }
+}

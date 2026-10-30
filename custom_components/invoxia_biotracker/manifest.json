@@ -1,0 +1,14 @@
+{
+  "domain": "invoxia_biotracker",
+  "name": "Invoxia GPS & Biotracker (unofficial)",
+  "codeowners": [
+    "@Alardware"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/Alardware/invoxia-biotracker-ha",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/Alardware/invoxia-biotracker-ha/issues",
+  "requirements": [],
+  "version": "0.1.1"
+}

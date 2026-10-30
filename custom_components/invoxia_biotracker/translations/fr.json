@@ -1,0 +1,69 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Compte Invoxia",
+        "description": "Saisissez l'adresse e-mail et le mot de passe de votre compte Invoxia (ceux de l'application Invoxia GPS ou Biotracker).",
+        "data": {
+          "username": "E-mail",
+          "password": "Mot de passe",
+          "api_url": "URL de l'API"
+        },
+        "data_description": {
+          "api_url": "Laissez la valeur par défaut sauf si vous savez ce que vous faites."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Mot de passe Invoxia",
+        "description": "Le mot de passe de {username} a été refusé. Saisissez le mot de passe actuel.",
+        "data": {
+          "password": "Mot de passe"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "E-mail ou mot de passe incorrect.",
+      "cannot_connect": "Impossible de joindre les serveurs Invoxia.",
+      "insecure_url": "Seules les adresses https:// sont acceptées, pour que votre mot de passe ne circule jamais en clair.",
+      "no_trackers": "Connexion réussie, mais l'API ne renvoie aucun traceur pour ce compte. Consultez les journaux de Home Assistant : les types d'appareils renvoyés par l'API y sont listés.",
+      "api_error": "L'API Invoxia a renvoyé une réponse inattendue. Détails dans les journaux de Home Assistant.",
+      "unknown": "Erreur inattendue. Détails dans les journaux de Home Assistant."
+    },
+    "abort": {
+      "already_configured": "Ce compte Invoxia est déjà configuré.",
+      "reauth_successful": "Ré-authentification réussie."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options Invoxia",
+        "data": {
+          "scan_interval": "Intervalle de mise à jour"
+        },
+        "data_description": {
+          "scan_interval": "Minutes entre deux requêtes vers le cloud Invoxia. L'API n'est pas publique : évitez les petites valeurs."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_location": {
+        "name": "Dernière position"
+      },
+      "last_seen": {
+        "name": "Dernier signal"
+      },
+      "location_accuracy": {
+        "name": "Précision de la position"
+      },
+      "location_method": {
+        "name": "Méthode de localisation"
+      },
+      "tracker_state": {
+        "name": "État du traceur"
+      }
+    }
+  }
+}
