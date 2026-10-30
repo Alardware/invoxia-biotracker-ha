@@ -18,7 +18,8 @@ jobs:
       - uses: hacs/action@main
         with:
           category: integration
-          ignore: brands
+          # Topics and brands are only required to join the HACS default list.
+          ignore: brands topics
 
   hassfest:
     name: Hassfest
