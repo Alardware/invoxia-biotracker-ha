@@ -129,3 +129,7 @@ approuvé par Invoxia.
 pip install pytest-homeassistant-custom-component
 pytest
 ```
+
+## Licence
+
+MIT — voir [LICENSE](LICENSE).
