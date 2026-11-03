@@ -73,6 +73,12 @@ def auto_enable_custom_integrations(enable_custom_integrations):
     return
 
 
+@pytest.fixture(autouse=True)
+def no_retry_delay(monkeypatch):
+    """Retry failed reads without waiting in tests."""
+    monkeypatch.setattr("custom_components.invoxia_biotracker.api.RETRY_DELAY", 0)
+
+
 def mock_api(
     aioclient_mock: AiohttpClientMocker,
     devices: list[dict[str, Any]] | None = None,

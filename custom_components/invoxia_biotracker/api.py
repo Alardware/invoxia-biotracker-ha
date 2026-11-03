@@ -8,6 +8,7 @@ Minitailz Biotracker) or new fields never make the client fail.
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import aiohttp
@@ -16,6 +17,8 @@ from yarl import URL
 from .const import DEFAULT_API_URL, PHONE_DEVICE_TYPES
 
 REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=30)
+# A failed read (network error, HTTP 5xx) is retried once after this delay.
+RETRY_DELAY = 3
 
 
 class InvoxiaError(Exception):
@@ -74,6 +77,18 @@ class InvoxiaClient:
         self._api_url = validate_api_url(api_url)
 
     async def _get(self, path: str) -> Any:
+        """Run a GET request, retrying once when the server is busy or unreachable."""
+        try:
+            return await self._get_once(path)
+        except InvoxiaConnectionError:
+            pass
+        except InvoxiaApiError as err:
+            if err.status is None or err.status < 500:
+                raise
+        await asyncio.sleep(RETRY_DELAY)
+        return await self._get_once(path)
+
+    async def _get_once(self, path: str) -> Any:
         """Run a GET request and return the decoded JSON answer."""
         url = f"{self._api_url}/{path}"
         try:

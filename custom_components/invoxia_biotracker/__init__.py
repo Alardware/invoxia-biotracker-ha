@@ -41,5 +41,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: InvoxiaConfigEntry) -> 
 async def _async_update_listener(
     hass: HomeAssistant, entry: InvoxiaConfigEntry
 ) -> None:
-    """Reload the entry when options change."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    """Reload the entry when its options change."""
+    if dict(entry.options) != entry.runtime_data.loaded_options:
+        await hass.config_entries.async_reload(entry.entry_id)

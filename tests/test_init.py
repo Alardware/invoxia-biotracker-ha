@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -9,7 +11,11 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.components.diagnostics import (
     get_diagnostics_for_config_entry,
 )
-from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant_custom_component.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
+from yarl import URL
 
 from custom_components.invoxia_biotracker.const import DOMAIN
 
@@ -120,3 +126,63 @@ async def test_diagnostics_are_redacted(
     for secret in ("secret", "dog@example.com", "a1b2c3d4e5f6", "45.2", "45.1"):
         assert secret not in text
     assert diag["trackers"][str(TRACKER_ID)]["type"] == "tracker_05"
+
+
+async def test_busy_server_is_retried(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
+) -> None:
+    """A 503 answer is retried once, unnoticed."""
+    mock_api(aioclient_mock)
+    answers = iter(
+        [
+            AiohttpClientMockResponse(
+                "GET", URL(f"{API}/devices/"), status=503, text="busy"
+            ),
+            AiohttpClientMockResponse("GET", URL(f"{API}/devices/"), json=[BIOTRACKER]),
+        ]
+    )
+
+    async def _devices(method, url, data):
+        return next(answers)
+
+    aioclient_mock._mocks.insert(
+        0,
+        AiohttpClientMockResponse("GET", URL(f"{API}/devices/"), side_effect=_devices),
+    )
+    await _setup(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("device_tracker.rex") is not None
+
+
+async def test_failures_keep_values_and_slow_down(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Two failed updates keep the last values and double the interval."""
+    mock_api(aioclient_mock)
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data
+    assert coordinator.update_interval == timedelta(minutes=5)
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(f"{API}/devices/", status=503, text="busy")
+    for interval in (10, 20):
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+        assert hass.states.get("device_tracker.rex").state != "unavailable"
+        assert coordinator.update_interval == timedelta(minutes=interval)
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.get("device_tracker.rex").state == "unavailable"
+
+    aioclient_mock.clear_requests()
+    mock_api(aioclient_mock)
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.get("device_tracker.rex").state != "unavailable"
+    assert coordinator.update_interval == timedelta(minutes=5)

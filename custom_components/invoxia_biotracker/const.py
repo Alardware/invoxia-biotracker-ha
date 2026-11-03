@@ -16,6 +16,11 @@ DEFAULT_API_URL = "https://labs.invoxia.io"
 DEFAULT_SCAN_INTERVAL = 5
 MIN_SCAN_INTERVAL = 3
 MAX_SCAN_INTERVAL = 60
+# Consecutive failed updates during which the last values stay shown, so a
+# single failed answer does not make the trackers unavailable.
+STALE_TOLERANCE = 3
+# After a failed update the interval doubles, up to this many minutes.
+MAX_BACKOFF = 30
 
 # Device types returned by the API that are smartphones, not trackers.
 PHONE_DEVICE_TYPES = {"android", "iphone", "ios"}

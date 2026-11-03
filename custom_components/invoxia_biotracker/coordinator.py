@@ -19,6 +19,8 @@ from .const import (
     DOMAIN,
     LOCATION_METHODS,
     LOGGER,
+    MAX_BACKOFF,
+    STALE_TOLERANCE,
     TRACKER_ICONS,
     USAGE_ICONS,
 )
@@ -208,6 +210,10 @@ class InvoxiaCoordinator(DataUpdateCoordinator[dict[int, InvoxiaTracker]]):
         )
         self.client = client
         self.raw_devices: list[dict[str, Any]] = []
+        self._base_interval = timedelta(minutes=minutes)
+        self._failures = 0
+        # Options the entry was loaded with: other entry updates must not reload it.
+        self.loaded_options = dict(entry.options)
 
     async def _async_update_data(self) -> dict[int, InvoxiaTracker]:
         """Fetch devices, statuses and latest positions."""
@@ -217,7 +223,9 @@ class InvoxiaCoordinator(DataUpdateCoordinator[dict[int, InvoxiaTracker]]):
         except InvoxiaAuthError as err:
             raise ConfigEntryAuthFailed(str(err)) from err
         except InvoxiaError as err:
-            raise UpdateFailed(f"Error communicating with Invoxia: {err}") from err
+            return self._keep_last_values(err)
+        self._failures = 0
+        self.update_interval = self._base_interval
 
         self.raw_devices = devices
         trackers: dict[int, InvoxiaTracker] = {}
@@ -248,3 +256,19 @@ class InvoxiaCoordinator(DataUpdateCoordinator[dict[int, InvoxiaTracker]]):
             trackers[tracker.id] = tracker
 
         return trackers
+
+    def _keep_last_values(self, err: InvoxiaError) -> dict[int, InvoxiaTracker]:
+        """Keep the last values through a few failed updates in a row."""
+        self._failures += 1
+        # Slow down while the API fails, so a struggling server is not hammered.
+        self.update_interval = min(
+            self._base_interval * 2**self._failures, timedelta(minutes=MAX_BACKOFF)
+        )
+        if self.data is not None and self._failures < STALE_TOLERANCE:
+            LOGGER.debug(
+                "Invoxia update failed (%s in a row), keeping the last values: %s",
+                self._failures,
+                err,
+            )
+            return self.data
+        raise UpdateFailed(f"Error communicating with Invoxia: {err}") from err
